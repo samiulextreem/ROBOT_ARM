@@ -1,0 +1,71 @@
+
+// code to run test on close loop servo mtoor
+#include <Arduino.h>
+
+#define enPin 5    // Pin for ENABLE signal
+#define stpPin 6   // Pin for STEP signal
+#define dirPin 7   // Pin for DIRECTION signal
+
+// Motor and gearbox configuration
+#define STEPS_PER_REVOLUTION 200    // For a typical 1.8° stepper (200 steps per revolution)
+#define MICROSTEPS 16               // Microstepping setting on your driver
+#define GEAR_RATIO 30               // Gearbox ratio of 1:30
+
+
+void rotateShaftByDegrees(float shaftAngle); // Function prototype for rotating the shaft by a specified angle
+
+/**************************************************************
+*** Connect:
+    * D5---En (Select L or Hold for the En option on the closed-loop driver board)
+    * D6---Stp
+    * D7---Dir
+    * V+,Gnd----10~28V
+    * gnd---gnd
+*** Precautions:
+    * Connect the wire first, then power on, do not unplug or plug when the power is on!
+    * When powering on, first connect 10~28V power supply, 
+      then connect the Arduino control board USB power supply!
+    * Avoid damage caused by some effects.
+    * When the power is off, first cut off the USB power supply of the Arduino control board, 
+      then cut off the 10~28V power supply.
+***************************************************************/
+
+void setup() {
+  // Initialize pins
+  pinMode(enPin, OUTPUT);
+  digitalWrite(enPin, LOW); // Active low, check manual for your setup
+  pinMode(stpPin, OUTPUT);
+  digitalWrite(stpPin, LOW);
+  pinMode(dirPin, OUTPUT);
+  digitalWrite(dirPin, HIGH); // Set to HIGH for clockwise (change to LOW for counterclockwise)
+
+  // Initialize serial for debugging
+  Serial.begin(9600);
+  Serial.println("Closed-loop stepper motor driver test program started - Continuous Rotation");
+}
+
+void loop() {
+  // Function to rotate shaft by specific angle
+  rotateShaftByDegrees(90); // Rotate shaft by 90 degrees
+  delay(2000);              // Wait 2 seconds
+  rotateShaftByDegrees(-90); // Rotate shaft back by 90 degrees
+  delay(2000);              // Wait 2 seconds
+}
+
+// Function to rotate the output shaft by a specified angle
+void rotateShaftByDegrees(float shaftAngle) {
+  // Calculate total steps needed for the motor to rotate the shaft by the desired angle
+  // Formula: (shaftAngle / 360) * GEAR_RATIO * STEPS_PER_REVOLUTION * MICROSTEPS
+  long totalSteps = (long)((abs(shaftAngle) / 360.0) * GEAR_RATIO * STEPS_PER_REVOLUTION * MICROSTEPS);
+  
+  // Set direction based on positive or negative angle
+  digitalWrite(dirPin, shaftAngle >= 0 ? HIGH : LOW);
+  
+  // Send the required number of pulses
+  for (long i = 0; i < totalSteps; i++) {
+    digitalWrite(stpPin, HIGH);
+    delayMicroseconds(60); // Pulse width (adjust for speed)
+    digitalWrite(stpPin, LOW);
+    delayMicroseconds(60); // Interval between pulses (adjust for speed)
+  }
+}
