@@ -1,6 +1,7 @@
 /*
  * Robot Arm Control with DRM542 Stepper Motor Driver
  * Optimized for 15V operation with smooth motion and load bearing capability
+ * Now supports negative angles for bidirectional control!
  * 
  * Wiring Instructions:
  * --------------------
@@ -30,7 +31,8 @@
  * 
  * Usage:
  * - Open Serial Monitor (9600 baud)
- * - Enter an angle (0-360) and press Enter
+ * - Enter any angle (positive or negative) and press Enter
+ * - Examples: 90 (clockwise), -90 (counterclockwise), 450 (1.25 full rotations)
  * - Stepper motor will rotate to the desired angle with smooth acceleration/deceleration
  */
 
@@ -41,17 +43,19 @@
 #define DIR_PIN 3   // Digital pin D3 connected to DIR+ on DRM542, controls rotation direction
 #define ENABLE_PIN 4 // Optional: connect to ENA+ on DRM542 if available (for power saving)
 
-// Motor and Control Parameters - Modified for 400 steps per revolution
-#define STEPS_PER_REVOLUTION 400   // Driver configured for 400 pulses per revolution
+// Motor and Control Parameters - Configured for 1/16 microstepping
+#define FULL_STEPS_PER_REV 200     // Standard stepper motor: 200 full steps per revolution
+#define MICROSTEP_RATIO 16         // 1/16 microstepping (set via DRM542 DIP switches)
+#define STEPS_PER_REVOLUTION (FULL_STEPS_PER_REV * MICROSTEP_RATIO)  // 3200 steps per revolution
 
 // Speed control parameters
 #define SPEED_MODE_SLOW 1          // Slow speed mode
 #define SPEED_MODE_NORMAL 2        // Normal speed mode
 #define CURRENT_SPEED_MODE SPEED_MODE_SLOW  // Set the current speed mode (SPEED_MODE_SLOW or SPEED_MODE_NORMAL)
 
-// Delay values for different speeds (µs)
-#define PULSE_DELAY_NORMAL 1500    // Normal speed: 1500µs delay between pulses
-#define PULSE_DELAY_SLOW 15000     // Very slow speed: 15000µs (15ms) delay between pulses
+// Delay values for different speeds (µs) - Speed doubled by halving delays
+#define PULSE_DELAY_NORMAL 750     // Normal speed: 750µs delay between pulses (2x faster)
+#define PULSE_DELAY_SLOW 7500      // Slow speed: 7500µs (7.5ms) delay between pulses (2x faster)
 #define PULSE_WIDTH 10             // Short pulse width (µs) - most drivers need only 5-10µs
 
 // Load bearing capability improvements
@@ -59,7 +63,7 @@
 #define MIN_STEP_MOVEMENT 5        // Minimum steps to move (prevents tiny movements)
 
 // Calibration settings - Fix for the 90° → 180° issue
-#define ANGLE_CALIBRATION_FACTOR 01  // If motor moves to 180° when commanded to 90°, use 0.5
+#define ANGLE_CALIBRATION_FACTOR 1  // If motor moves to 180° when commanded to 90°, use 0.5
 #define DIRECTION_REVERSED false      // Set to true if motor moves in opposite direction than expected
 
 // Global variables for angle control
@@ -83,22 +87,23 @@ void setup() {
   // Initialize serial communication
   Serial.begin(9600);
   Serial.println("Robot Arm - Stepper Motor Angle Control (Constant Speed Mode)");
-  Serial.println("Driver configured for 400 steps per revolution");
+  Serial.println("Driver configured for 3200 steps per revolution (1/16 microstepping)");
   
   // Display speed mode
   if (CURRENT_SPEED_MODE == SPEED_MODE_SLOW) {
-    Serial.println("Speed Mode: SLOW - For very slow, precise movements");
+    Serial.println("Speed Mode: SLOW - For precise movements (2x faster than before)");
   } else {
-    Serial.println("Speed Mode: NORMAL - Standard operating speed");
+    Serial.println("Speed Mode: NORMAL - High speed operation");
   }
   
   Serial.println("Calibration fix applied - Using factor: " + String(ANGLE_CALIBRATION_FACTOR));
   Serial.println("Motor using constant speed to prevent shaft slipping");
+  Serial.println("Now accepts negative angles! (-90° rotates counterclockwise)");
   // Optional: Reset to a known position
   // Uncomment this if you want the motor to always start at zero
   // currentAngle = 0.0;
   
-  Serial.println("Enter an angle (0-360) to move the motor:");
+  Serial.println("Enter an angle (-360 to +360 or beyond) to move the motor:");
   
   // Reserve memory for input string
   inputString.reserve(10);
@@ -110,24 +115,28 @@ void loop() {
     // Convert input string to float
     float targetAngle = inputString.toFloat();
     
-    // Ensure angle is within valid range
-    if (targetAngle >= 0 && targetAngle <= 360) {
-      Serial.print("Moving to angle: ");
-      Serial.println(targetAngle);
-      
-      // Rotate motor to target angle
-      rotateToAngle(targetAngle);
-      
-      Serial.print("Current position: ");
-      Serial.println(currentAngle);
-    } else {
-      Serial.println("Invalid angle. Please enter a value between 0 and 360.");
-    }
+    // Accept any angle (including negative values)
+    // Normalize to 0-360 range for internal calculations
+    float normalizedAngle = targetAngle;
+    while (normalizedAngle < 0) normalizedAngle += 360;
+    while (normalizedAngle >= 360) normalizedAngle -= 360;
+    
+    Serial.print("Input angle: ");
+    Serial.print(targetAngle);
+    Serial.print("° | Normalized: ");
+    Serial.print(normalizedAngle);
+    Serial.println("°");
+    
+    // Rotate motor to target angle
+    rotateToAngle(normalizedAngle);
+    
+    Serial.print("Current position: ");
+    Serial.println(currentAngle);
     
     // Reset for next command
     inputString = "";
     stringComplete = false;
-    Serial.println("Enter an angle (0-360) to move the motor:");
+    Serial.println("Enter an angle (-360 to +360 or beyond) to move the motor:");
   }
   
   // Read serial data
