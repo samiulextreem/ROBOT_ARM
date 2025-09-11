@@ -1,4 +1,5 @@
-// code to run test on close loop servo mtoor
+// code to run test on close loop servo mtoor 1 hooked up with blur arduino
+
 #include <Arduino.h>
 
 #define enPin 5    // Pin for ENABLE signal
@@ -122,8 +123,8 @@ void rotateShaftByDegrees(float shaftAngle) {
   // Send the required number of pulses
   for (long i = 0; i < totalSteps; i++) {
     digitalWrite(stpPin, HIGH);
-    delayMicroseconds(60); // Pulse width (adjust for speed)
+    delayMicroseconds(600); // Pulse width (slowed to 1/10th speed)
     digitalWrite(stpPin, LOW);
-    delayMicroseconds(60); // Interval between pulses (adjust for speed)
+    delayMicroseconds(600); // Interval between pulses (slowed to 1/10th speed)
   }
 }

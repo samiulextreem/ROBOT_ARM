@@ -1,21 +1,21 @@
-// code to run test on close loop servo mtoor
+// code to run test on close loop servo mtoor 1 hooked up with black arduino
 #include <Arduino.h>
 
 #define enPin 5    // Pin for ENABLE signal
 #define stpPin 6   // Pin for STEP signal
 #define dirPin 7   // Pin for DIRECTION signal
 
-// Motor and gearbox configuration
+// Motor configuration (no gearbox)
 #define STEPS_PER_REVOLUTION 200    // For a typical 1.8° stepper (200 steps per revolution)
 #define MICROSTEPS 16               // Microstepping setting on your driver
-#define GEAR_RATIO 30               // Gearbox ratio of 1:30
+#define GEAR_RATIO 1                // No gearbox - direct drive (1:1 ratio)
 
 // Global variables
 float currentAngle = 0.0;           // Keeps track of the current shaft angle
 String inputString = "";            // String to hold incoming serial data
 boolean stringComplete = false;     // Flag to indicate if a complete string has been received
 
-void rotateShaftByDegrees(float shaftAngle); // Function prototype for rotating the shaft by a specified angle
+void rotateShaftByDegrees(float shaftAngle); // Function prototype for rotating the motor shaft by a specified angle
 void rotateShaftToAngle(float targetAngle);  // Function prototype for rotating to a specific angle
 
 /**************************************************************
@@ -109,10 +109,11 @@ void rotateShaftToAngle(float targetAngle) {
   Serial.println(currentAngle);
 }
 
-// Function to rotate the output shaft by a specified angle
+// Function to rotate the motor shaft by a specified angle
 void rotateShaftByDegrees(float shaftAngle) {
-  // Calculate total steps needed for the motor to rotate the shaft by the desired angle
+  // Calculate total steps needed for the motor to rotate by the desired angle
   // Formula: (shaftAngle / 360) * GEAR_RATIO * STEPS_PER_REVOLUTION * MICROSTEPS
+  // Since GEAR_RATIO = 1 (no gearbox), this simplifies to: (shaftAngle / 360) * STEPS_PER_REVOLUTION * MICROSTEPS
   long totalSteps = (long)((abs(shaftAngle) / 360.0) * GEAR_RATIO * STEPS_PER_REVOLUTION * MICROSTEPS);
   
   // Set direction based on positive or negative angle
