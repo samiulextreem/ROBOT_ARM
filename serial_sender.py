@@ -4,7 +4,7 @@ import sys
 
 # ===== SERIAL PORT CONFIGURATION =====
 # Change these values to match your actual serial ports
-PORT1 = 'COM5'   # First serial port
+PORT1 = 'COM9'   # First serial port
 PORT2 = 'COM8'  # Second serial port
 BAUD_RATE = 9600 # Communication speed
 TIMEOUT = 1      # Timeout in seconds
