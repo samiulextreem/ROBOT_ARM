@@ -6,14 +6,14 @@ import numpy as np
 
 # ===== ROBOT ARM CONFIGURATION =====
 # Serial Port Settings
-PORT1 = 'COM9'   # Port for Joint 1 (theta1)
-PORT2 = 'COM8'  # Port for Joint 2 (theta2)
+PORT1 = 'COM11'   # Port for Joint 1 (theta1)
+PORT2 = 'COM10'  # Port for Joint 2 (theta2)
 BAUD_RATE = 9600 # Communication speed
 TIMEOUT = 1      # Timeout in seconds
 
 # Robot Arm Physical Parameters (in millimeters)
-L1 = 220.0  # Length of first link in mm
-L2 = 185.0   # Length of second link in mm
+L1 = 214.0  # Length of first link in mm
+L2 = 184.0   # Length of second link in mm
 
 # Robot Direction Configuration
 # Set to True if positive angles should rotate clockwise (opposite of math convention)

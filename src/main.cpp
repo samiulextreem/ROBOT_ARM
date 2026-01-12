@@ -1,3 +1,4 @@
+// code to run test on close loop servo mtoor 1 hooked up with blur arduino
 
 #include <Arduino.h>
 
@@ -5,12 +6,12 @@
 #define stpPin 6   // Pin for STEP signal
 #define dirPin 7   // Pin for DIRECTION signal
 
-// Motor configuration (gearbox)
+// Motor configuration (no gearbox)
 #define STEPS_PER_REVOLUTION 200    // For a typical 1.8° stepper (200 steps per revolution)
 #define MICROSTEPS 16               // Microstepping setting on your driver
-#define GEAR_RATIO 30                // Gearbox ratio (e.g., 30:1 gearbox)
+#define GEAR_RATIO 1                // No gearbox - direct drive (1:1 ratio)
 
-// Global variables
+// Global variablesSds
 float currentAngle = 0.0;           // Keeps track of the current shaft angle
 String inputString = "";            // String to hold incoming serial data
 boolean stringComplete = false;     // Flag to indicate if a complete string has been received
@@ -122,8 +123,8 @@ void rotateShaftByDegrees(float shaftAngle) {
   // Send the required number of pulses
   for (long i = 0; i < totalSteps; i++) {
     digitalWrite(stpPin, HIGH);
-    delayMicroseconds(60); // Pulse width (adjust for speed)
+    delayMicroseconds(600); // Pulse width (slowed to 1/10th speed)
     digitalWrite(stpPin, LOW);
-    delayMicroseconds(60); // Interval between pulses (adjust for speed)
+    delayMicroseconds(600); // Interval between pulses (slowed to 1/10th speed)
   }
 }
